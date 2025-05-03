@@ -1,26 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WanderLust</title>
-</head>
-<body>
-    <h2>Create a new listings</h2>
-    <form action="/listings" method="POST">
-        <input type="text" name="title" placeholder="enter title">
+<% layout("layouts/boilerplate") %>
+
+<div class="row mt-3">
+    <div class="col-8 offset-2">
         <br>
-        <textarea type="text" name="description" placeholder="enter description" rows="4" cols="30"></textarea>
-        <br><br>
-        <input type="text" name="image" placeholder="enter image URL/Link">
-        <br><br>
-        <input type="number" name="price" placeholder="enter price">
-        <br><br>
-        <input type="text" name="location" placeholder="enter location">
-        <br><br>
-        <input type="text" name="country" placeholder="enter country">
-        <br><br>    
-        <button>Add</button>
-    </form>
-</body>
-</html>
+        <h2>Create a new listings</h2>
+        <br>
+        <form action="/listings" method="POST">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" name="title" class="form-control" placeholder="Add a catchy title">
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea name="description" class="form-control" placeholder="Share us what's about it" rows="4"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="image" class="form-label">Image Link</label>
+                <input type="text" name="image" class="form-control" placeholder="enter image URL/Link">
+            </div>
+
+            <!-- Price and Country in one row -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="price" class="form-label">Price</label>
+                    <input type="number" name="price" class="form-control" placeholder="1200">
+                </div>
+                <div class="col-md-8">
+                    <label for="country" class="form-label">Country</label>
+                    <input type="text" name="country" class="form-control" placeholder="India">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" placeholder="visakhapatnam, AndhraPradesh">
+            </div>
+            <br>
+
+            <button class="btn btn-dark add-btn mt-3">Add</button>
+            <br><br>
+        </form>
+    </div>
+</div>
