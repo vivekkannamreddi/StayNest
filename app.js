@@ -82,7 +82,7 @@ app.post("/listings",validateListing,wrapAsync(async (req,res,next)=>{
     // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
     //     throw new ExpressError(400,"Send valid data for listing");
     // }
-    let {title,description,image,price,location,country}= req.body;
+    let {title,description,image,price,location,country}= req.body.listing;
     const newlisting = new List({
         title:title,
         description:description,
@@ -134,7 +134,7 @@ app.put("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
 }))
 
 //delete route
-app.delete("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
+app.delete("/listings/:id",wrapAsync(async (req,res)=>{
     let {id}=req.params;
     let deletedlisting = await List.findByIdAndDelete(id);
     console.log(deletedlisting)
