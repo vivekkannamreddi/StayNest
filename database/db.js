@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
-const { mongoURI } = require("../config.js");  
+
+const mongoURI = process.env.mongoURI || require("../config.js").mongoURI;
 
 const connectdb = async () => {
   try {
@@ -10,7 +11,5 @@ const connectdb = async () => {
     process.exit(1);
   }
 };
-
-
 
 module.exports = connectdb;
