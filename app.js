@@ -7,7 +7,8 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const wrapAsync=require("./utility/wrapAsync.js");
 const ExpressError = require("./utility/ExpressErrors.js")
-const listingSchemaJoi = require("./schemaValidationJoi")
+const {listingSchemaJoi} = require("./schemaValidationJoi.js")
+const joi = require("joi")
 
 const connectdb = require('./database/db.js');
 connectdb().then(() => {
@@ -46,7 +47,7 @@ app.use(express.static(path.join(__dirname,"public")))
     
 const validateListing = (req,res,next)=>{
     let {error}= listingSchemaJoi.validate(req.body);
-    console.log(result);
+    
     if(error){
         let errorMessage = error.details.map((el)=>el.message).join(",");
         throw new ExpressError(400,error)
@@ -57,7 +58,7 @@ const validateListing = (req,res,next)=>{
 
 
 //index route
-app.get('/listings',wrapAsync(async(req,res)=>{
+app.get('/listings',validateListing,wrapAsync(async(req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
 }))
@@ -69,7 +70,7 @@ app.get("/listings/new",(req,res)=>{
 })
 
 //show route
-app.get('/listings/:id',wrapAsync(async (req,res)=>{
+app.get('/listings/:id',validateListing,wrapAsync(async (req,res)=>{
     let {id} = req.params;
     const listing = await List.findById(id);
     res.render("./listings/show.ejs",{listing})
@@ -99,7 +100,7 @@ app.post("/listings",validateListing,wrapAsync(async (req,res,next)=>{
 ))
 
 //edit route
-app.get("/listings/:id/edit",wrapAsync(async (req,res)=>{
+app.get("/listings/:id/edit",validateListing,wrapAsync(async (req,res)=>{
     let {id} = req.params;
     const listing = await List.findById(id);
     res.render("./listings/edit.ejs",{listing});
@@ -111,7 +112,7 @@ app.put("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
     // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
     //     throw new ExpressError(400,"Send valid data for listing");
     // }
-    let {title,description,image,price,location,country}= req.body;
+    let {title,description,image,price,location,country}= req.body.listing;
     const newlisting = new List({
         title:title,
         description:description,
@@ -133,7 +134,7 @@ app.put("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
 }))
 
 //delete route
-app.delete("/listings/:id",wrapAsync(async (req,res)=>{
+app.delete("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
     let {id}=req.params;
     let deletedlisting = await List.findByIdAndDelete(id);
     console.log(deletedlisting)
@@ -154,7 +155,7 @@ app.use((err,req,res,next)=>{
 
 
 
-app.get('/',wrapAsync(async (req,res)=>{
+app.get('/',validateListing,wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
     
