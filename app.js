@@ -135,8 +135,10 @@ app.delete("/listings/:id",async (req,res)=>{
 
 
 
-app.get('/listings',(req,res)=>{
-    res.send("wokring");
+app.get('/',async (req,res)=>{
+    const allLists =  await List.find({});
+    res.render("./listings/index.ejs",{allLists});
+    
 })
 
 app.listen(port,(req,res)=>{
