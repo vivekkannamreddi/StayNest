@@ -142,9 +142,6 @@ app.delete("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
 }))
 
 
-app.use((req,res,next)=>{
-    next(new ExpressError(404,"Page Not Found"))
-});
 
 
 app.use((err,req,res,next)=>{
@@ -155,7 +152,7 @@ app.use((err,req,res,next)=>{
 
 
 
-app.get('/listings',validateListing,wrapAsync(async (req,res)=>{
+app.get('/',validateListing,wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
     
@@ -164,3 +161,9 @@ app.get('/listings',validateListing,wrapAsync(async (req,res)=>{
 app.listen(port,(req,res)=>{
     console.log("server is listening at port 3000...");
 })
+
+
+
+app.use((req,res,next)=>{
+    next(new ExpressError(404,"Page Not Found"))
+});
