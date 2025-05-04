@@ -5,9 +5,22 @@ const path = require("path");
 const mo = require("method-override");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
+
+
+const connectdb = require('./database/db.js');
+connectdb().then(() => {
+    console.log("Connected to MongoDB Atlas");
+}).catch((error) => {
+    console.log("Failed to connect to MongoDB Atlas", error);
+});
+
+
     
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+
+
+
 
 app.engine("ejs",ejsMate)
 
@@ -18,34 +31,20 @@ app.use(express.urlencoded({extended:true}));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname,"public")))
 
-main().then((result)=>{
-    console.log("connection established...");
-}).catch((error)=>{
-    console.log("connection failed..");
-})
+// main().then((result)=>{
+//     console.log("connection established...");
+// }).catch((error)=>{
+//     console.log("connection failed..");
+// })
 
-async function main(){
-    await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust")
-}
+// async function main(){
+//     await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust")
+// }
 
     
 
 
-    // app.get('/testlisting',async (req,res)=>{
-    //     let samplelisting = new List({
-    //         title:"My new villa",
-    //         description:"By the beach",
-    //         price:1200,
-    //         location:"Calangute , Goa",
-    //         country:"India"
-    //     })
-    //     await samplelisting.save()
-    //     .then((result)=>{
-    //         console.log("saved to database successfully");
-    //     }).catch((error)=>{
-    //         console.log("failed to save in database");
-    //     })
-    // })
+
 
 
 
@@ -72,6 +71,7 @@ app.get('/listings/:id',async (req,res)=>{
 
 //create route
 app.post("/listings",async (req,res)=>{
+    try{
     let {title,description,image,price,location,country}= req.body;
     const newlisting = new List({
         title:title,
@@ -82,7 +82,12 @@ app.post("/listings",async (req,res)=>{
         country:country,
     })
     await newlisting.save();
-    res.redirect("/listings");
+        console.log("Listing saved:", newlisting);
+        res.redirect("/listings");
+    } catch (err) {
+        console.error("Error saving listing:", err);
+        res.send("Failed to save listing");
+    }
 
 })
 
