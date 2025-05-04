@@ -5,7 +5,9 @@ const path = require("path");
 const mo = require("method-override");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
-
+const wrapAsync=require("./utility/wrapAsync.js");
+const ExpressError = require("./utility/ExpressErrors.js")
+const listingSchemaJoi = require("./schemaValidationJoi")
 
 const connectdb = require('./database/db.js');
 connectdb().then(() => {
@@ -42,18 +44,23 @@ app.use(express.static(path.join(__dirname,"public")))
 // }
 
     
-
-
-
-
-
+const validateListing = (req,res,next)=>{
+    let {error}= listingSchemaJoi.validate(req.body);
+    console.log(result);
+    if(error){
+        let errorMessage = error.details.map((el)=>el.message).join(",");
+        throw new ExpressError(400,error)
+    }else{
+        next();
+    }
+}
 
 
 //index route
-app.get('/listings',async(req,res)=>{
+app.get('/listings',wrapAsync(async(req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
-})
+}))
 
 
 //new route
@@ -62,16 +69,18 @@ app.get("/listings/new",(req,res)=>{
 })
 
 //show route
-app.get('/listings/:id',async (req,res)=>{
+app.get('/listings/:id',wrapAsync(async (req,res)=>{
     let {id} = req.params;
     const listing = await List.findById(id);
     res.render("./listings/show.ejs",{listing})
-})
+}))
 
 
 //create route
-app.post("/listings",async (req,res)=>{
-    try{
+app.post("/listings",validateListing,wrapAsync(async (req,res,next)=>{
+    // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
+    //     throw new ExpressError(400,"Send valid data for listing");
+    // }
     let {title,description,image,price,location,country}= req.body;
     const newlisting = new List({
         title:title,
@@ -84,23 +93,24 @@ app.post("/listings",async (req,res)=>{
     await newlisting.save();
         console.log("Listing saved:", newlisting);
         res.redirect("/listings");
-    } catch (err) {
-        console.error("Error saving listing:", err);
-        res.send("Failed to save listing");
+    
     }
 
-})
+))
 
 //edit route
-app.get("/listings/:id/edit",async (req,res)=>{
+app.get("/listings/:id/edit",wrapAsync(async (req,res)=>{
     let {id} = req.params;
     const listing = await List.findById(id);
     res.render("./listings/edit.ejs",{listing});
-})
+}))
 
     
 //update route
-app.put("/listings/:id",async (req,res)=>{
+app.put("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
+    // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
+    //     throw new ExpressError(400,"Send valid data for listing");
+    // }
     let {title,description,image,price,location,country}= req.body;
     const newlisting = new List({
         title:title,
@@ -120,26 +130,35 @@ app.put("/listings/:id",async (req,res)=>{
         country:country,
     })
     res.redirect("/listings");
-})
+}))
 
 //delete route
-app.delete("/listings/:id",async (req,res)=>{
+app.delete("/listings/:id",wrapAsync(async (req,res)=>{
     let {id}=req.params;
     let deletedlisting = await List.findByIdAndDelete(id);
     console.log(deletedlisting)
     res.redirect("/listings")
+}))
+
+
+app.use((req,res,next)=>{
+    next(new ExpressError(404,"Page Not Found"))
+});
+
+
+app.use((err,req,res,next)=>{
+    let {statusCode=500,message="Something went wrong"} = err;
+    // res.status(statusCode).send(message);
+    res.status(statusCode).render("./ErrorPage/error.ejs",{message})
 })
 
 
 
-
-
-
-app.get('/',async (req,res)=>{
+app.get('/',wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
     
-})
+}))
 
 app.listen(port,(req,res)=>{
     console.log("server is listening at port 3000...");
