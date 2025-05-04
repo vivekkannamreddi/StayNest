@@ -135,7 +135,7 @@ app.delete("/listings/:id",async (req,res)=>{
 
 
 
-app.get('/',(req,res)=>{
+app.get('/listings',(req,res)=>{
     res.send("wokring");
 })
 
