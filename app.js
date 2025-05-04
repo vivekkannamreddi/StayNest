@@ -155,7 +155,7 @@ app.use((err,req,res,next)=>{
 
 
 
-app.get('/',validateListing,wrapAsync(async (req,res)=>{
+app.get('/listings',validateListing,wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
     
