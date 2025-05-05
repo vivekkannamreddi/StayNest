@@ -7,8 +7,10 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const wrapAsync=require("./utility/wrapAsync.js");
 const ExpressError = require("./utility/ExpressErrors.js")
-const {listingSchemaJoi} = require("./schemaValidationJoi.js")
+const {listingSchemaJoi ,reviewSchemaJoi} = require("./schemaValidationJoi.js")
 const joi = require("joi")
+const Review = require('./models/review.js');
+
 
 const connectdb = require('./database/db.js');
 connectdb().then(() => {
@@ -56,6 +58,17 @@ const validateListing = (req,res,next)=>{
     }
 }
 
+const validateReview = (req,res,next)=>{
+    let {error}= reviewSchemaJoi.validate(req.body);
+    
+    if(error){
+        let errorMessage = error.details.map((el)=>el.message).join(",");
+        throw new ExpressError(400,error)
+    }else{
+        next();
+    }
+}
+
 
 //index route
 app.get('/listings',validateListing,wrapAsync(async(req,res)=>{
@@ -72,7 +85,7 @@ app.get("/listings/new",(req,res)=>{
 //show route
 app.get('/listings/:id',validateListing,wrapAsync(async (req,res)=>{
     let {id} = req.params;
-    const listing = await List.findById(id);
+    const listing = await List.findById(id).populate("review");
     res.render("./listings/show.ejs",{listing})
 }))
 
@@ -142,6 +155,27 @@ app.delete("/listings/:id",wrapAsync(async (req,res)=>{
 }))
 
 
+//reviews route
+app.post("/listings/:id/reviews",validateReview,wrapAsync(async(req,res)=>{
+    let {id}= req.params;
+    let listing = await List.findById(id);
+    let newreview = new Review(req.body.review);
+    listing.review.push(newreview);
+    await newreview.save();
+    await listing.save();
+    res.redirect(`/listings/${id}`)
+    
+}))
+
+
+//delete review route
+app.delete("/listings/:id/review/:reviewId",wrapAsync(async(req,res)=>{
+    let {id,reviewId} = req.params;
+    await List.findByIdAndUpdate(id,{$pull:{review:reviewId}})
+    await Review.findByIdAndDelete(reviewId);
+    
+    res.redirect(`/listings/${id}`)
+}))
 
 
 app.use((err,req,res,next)=>{
@@ -152,7 +186,7 @@ app.use((err,req,res,next)=>{
 
 
 
-app.get('/',validateListing,wrapAsync(async (req,res)=>{
+app.get('/',validateListing,validateListing,wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
     

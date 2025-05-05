@@ -54,7 +54,7 @@ body{
 
 /* cards */
 
-.card{
+.listing-card{
     border: none !important;
     margin-bottom: 2rem;
 }
@@ -107,4 +107,8 @@ body{
     width: 120px !important;
     height: 35px !important;
     margin-right: -10px;
+}
+.btn-universal{
+    height: 32px;
+    
 }
