@@ -1,40 +1,27 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const List = require('./models/listing.js');
 const path = require("path");
-const mo = require("method-override");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const wrapAsync=require("./utility/wrapAsync.js");
 const ExpressError = require("./utility/ExpressErrors.js")
 const {listingSchemaJoi ,reviewSchemaJoi} = require("./schemaValidationJoi.js")
-const joi = require("joi")
-const Review = require('./models/review.js');
-
-
-const connectdb = require('./database/db.js');
-connectdb().then(() => {
-    console.log("Connected to MongoDB Atlas");
-}).catch((error) => {
-    console.log("Failed to connect to MongoDB Atlas", error);
-});
-
-
+const listingRoute = require("./routes/listingRoute.js")
+const reviewRoute = require('./routes/reviewRoute.js');
+const session = require("express-session");
+const flash = require("connect-flash");
     
 const app = express();
 const port = process.env.PORT || 3000;
 
-
-
-
 app.engine("ejs",ejsMate)
-
-
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
 app.use(express.urlencoded({extended:true}));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname,"public")))
+
+
 
 // main().then((result)=>{
 //     console.log("connection established...");
@@ -46,6 +33,12 @@ app.use(express.static(path.join(__dirname,"public")))
 //     await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust")
 // }
 
+const connectdb = require('./database/db.js');
+connectdb().then(() => {
+    console.log("Connected to MongoDB Atlas");
+}).catch((error) => {
+    console.log("Failed to connect to MongoDB Atlas", error);
+});
     
 const validateListing = (req,res,next)=>{
     let {error}= listingSchemaJoi.validate(req.body);
@@ -58,124 +51,34 @@ const validateListing = (req,res,next)=>{
     }
 }
 
-const validateReview = (req,res,next)=>{
-    let {error}= reviewSchemaJoi.validate(req.body);
-    
-    if(error){
-        let errorMessage = error.details.map((el)=>el.message).join(",");
-        throw new ExpressError(400,error)
-    }else{
-        next();
-    }
+
+
+
+const sessionOptions = {
+    secret:"mysupersecretcode",
+    resave:false,
+    saveUninitialized:true,
+    cookie:{
+        expires:Date.now() + 7*24*60*60*1000,
+        maxAge:7*24*60*60*1000,
+        httpOnly:true
+    },
 }
 
+app.use(session(sessionOptions));
+app.use(flash());
 
-//index route
-app.get('/listings',validateListing,wrapAsync(async(req,res)=>{
-    const allLists =  await List.find({});
-    res.render("./listings/index.ejs",{allLists});
-}))
-
-
-//new route
-app.get("/listings/new",(req,res)=>{
-    res.render("./listings/new.ejs")
+app.use((req,res,next)=>{
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    next();
 })
 
-//show route
-app.get('/listings/:id',validateListing,wrapAsync(async (req,res)=>{
-    let {id} = req.params;
-    const listing = await List.findById(id).populate("review");
-    res.render("./listings/show.ejs",{listing})
-}))
 
 
-//create route
-app.post("/listings",validateListing,wrapAsync(async (req,res,next)=>{
-    // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
-    //     throw new ExpressError(400,"Send valid data for listing");
-    // }
-    let {title,description,image,price,location,country}= req.body.listing;
-    const newlisting = new List({
-        title:title,
-        description:description,
-        image:{url:image},
-        price:price,
-        location:location,
-        country:country,
-    })
-    await newlisting.save();
-        console.log("Listing saved:", newlisting);
-        res.redirect("/listings");
-    
-    }
+app.use("/listings",listingRoute)
+app.use("/listings/:id/review",reviewRoute)
 
-))
-
-//edit route
-app.get("/listings/:id/edit",validateListing,wrapAsync(async (req,res)=>{
-    let {id} = req.params;
-    const listing = await List.findById(id);
-    res.render("./listings/edit.ejs",{listing});
-}))
-
-    
-//update route
-app.put("/listings/:id",validateListing,wrapAsync(async (req,res)=>{
-    // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
-    //     throw new ExpressError(400,"Send valid data for listing");
-    // }
-    let {title,description,image,price,location,country}= req.body.listing;
-    const newlisting = new List({
-        title:title,
-        description:description,
-        image:{url:image},
-        price:price,
-        location:location,
-        country:country,
-    })
-    let {id} = req.params;
-    await List.findByIdAndUpdate(id,{
-        title:title,
-        description:description,
-        image:{url:image},
-        price:price,
-        location:location,
-        country:country,
-    })
-    res.redirect("/listings");
-}))
-
-//delete route
-app.delete("/listings/:id",wrapAsync(async (req,res)=>{
-    let {id}=req.params;
-    let deletedlisting = await List.findByIdAndDelete(id);
-    console.log(deletedlisting)
-    res.redirect("/listings")
-}))
-
-
-//reviews route
-app.post("/listings/:id/reviews",validateReview,wrapAsync(async(req,res)=>{
-    let {id}= req.params;
-    let listing = await List.findById(id);
-    let newreview = new Review(req.body.review);
-    listing.review.push(newreview);
-    await newreview.save();
-    await listing.save();
-    res.redirect(`/listings/${id}`)
-    
-}))
-
-
-//delete review route
-app.delete("/listings/:id/review/:reviewId",wrapAsync(async(req,res)=>{
-    let {id,reviewId} = req.params;
-    await List.findByIdAndUpdate(id,{$pull:{review:reviewId}})
-    await Review.findByIdAndDelete(reviewId);
-    
-    res.redirect(`/listings/${id}`)
-}))
 
 
 app.use((err,req,res,next)=>{
@@ -186,7 +89,7 @@ app.use((err,req,res,next)=>{
 
 
 
-app.get('/',validateListing,validateListing,wrapAsync(async (req,res)=>{
+app.get('/',validateListing,wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
     res.render("./listings/index.ejs",{allLists});
     
