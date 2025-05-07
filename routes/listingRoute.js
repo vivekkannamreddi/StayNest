@@ -2,21 +2,11 @@ const express = require("express");
 const router = express.Router({mergeParams:true});
 const List = require('../models/listing.js');
 const wrapAsync=require("../utility/wrapAsync.js");
-const ExpressError = require("../utility/ExpressErrors.js")
-const {listingSchemaJoi } = require("../schemaValidationJoi.js")
+const {isLoggedIn,isOwnerEditDelete,validateListing } = require("../middleware.js")
 
 
 
-const validateListing = (req,res,next)=>{
-    let {error}= listingSchemaJoi.validate(req.body);
-    
-    if(error){
-        let errorMessage = error.details.map((el)=>el.message).join(",");
-        throw new ExpressError(400,error)
-    }else{
-        next();
-    }
-}
+
 
 //index route
 router.get('/',validateListing,wrapAsync(async(req,res)=>{
@@ -26,14 +16,15 @@ router.get('/',validateListing,wrapAsync(async(req,res)=>{
 
 
 //new route
-router.get("/new",(req,res)=>{
+router.get("/new",isLoggedIn,(req,res)=>{
     res.render("./listings/new.ejs")
 })
 
 //show route
 router.get('/:id',validateListing,wrapAsync(async (req,res)=>{
     let {id} = req.params;
-    const listing = await List.findById(id).populate("review");
+    const listing = await List.findById(id).populate("review").populate("owner");
+    console.log(listing)
     if(!listing){
         req.flash("error","Listing you requested for does not exist");
         return res.redirect("/listings")
@@ -44,7 +35,7 @@ router.get('/:id',validateListing,wrapAsync(async (req,res)=>{
 
 
 //create route
-router.post("/",validateListing,wrapAsync(async (req,res,next)=>{
+router.post("/",validateListing,isLoggedIn,wrapAsync(async (req,res,next)=>{
     // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
     //     throw new ExpressError(400,"Send valid data for listing");
     // }
@@ -56,7 +47,8 @@ router.post("/",validateListing,wrapAsync(async (req,res,next)=>{
         price:price,
         location:location,
         country:country,
-    })
+    });
+    newlisting.owner = req.user._id;
     await newlisting.save();
         req.flash("success","New Listing created")
         res.redirect("/listings");
@@ -66,10 +58,9 @@ router.post("/",validateListing,wrapAsync(async (req,res,next)=>{
 ))
 
 //edit route
-router.get("/:id/edit",validateListing,wrapAsync(async (req,res)=>{
+router.get("/:id/edit",isLoggedIn,isOwnerEditDelete,validateListing,wrapAsync(async (req,res)=>{
     let {id} = req.params;
     const listing = await List.findById(id);
-    console.log("hello")
     if(!listing){
         req.flash("error","Listing you requested for does not exist");
         return res.redirect("/listings")
@@ -79,7 +70,7 @@ router.get("/:id/edit",validateListing,wrapAsync(async (req,res)=>{
 
     
 //update route
-router.put("/:id",validateListing,wrapAsync(async (req,res)=>{
+router.put("/:id",isLoggedIn,isOwnerEditDelete,validateListing,wrapAsync(async (req,res)=>{
     // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
     //     throw new ExpressError(400,"Send valid data for listing");
     // }
@@ -101,12 +92,12 @@ router.put("/:id",validateListing,wrapAsync(async (req,res)=>{
         location:location,
         country:country,
     })
-    req.flash("success","Listing Updated")
-    res.redirect("/listings");
+    req.flash("success","Listing Updated");
+    res.redirect(`/listings/${id}`);
 }))
 
 //delete route
-router.delete("/:id",wrapAsync(async (req,res)=>{
+router.delete("/:id",isLoggedIn,isOwnerEditDelete,isLoggedIn,wrapAsync(async (req,res)=>{
     let {id}=req.params;
     let deletedlisting = await List.findByIdAndDelete(id);
     console.log(deletedlisting)
