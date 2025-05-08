@@ -33,6 +33,17 @@ module.exports.isOwnerEditDelete=async(req,res,next)=>{
 }
 
 
+module.exports.isAuthorReview=async(req,res,next)=>{
+    let {id,reviewId} = req.params;
+    let review = await Review.findById(reviewId);
+    if(!review.author.equals(res.locals.currentUser._id)){
+        req.flash("error","You don't have access to delete");
+        return res.redirect(`/listings/${id}`);
+    }
+    next();
+}
+
+
 module.exports.validateListing = (req,res,next)=>{
     let {error}= listingSchemaJoi.validate(req.body);
     
@@ -55,3 +66,5 @@ module.exports.validateReview = (req,res,next)=>{
         next();
     }
 }
+
+

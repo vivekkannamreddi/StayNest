@@ -5,7 +5,7 @@
         <br>
         <h2>Create a new listings</h2>
         <br>
-        <form action="/listings" method="POST" novalidate class="needs-validation">
+        <form action="/listings" method="POST" novalidate class="needs-validation" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="title" class="form-label">Title</label>
                 <input type="text" name="listing[title]" class="form-control" placeholder="Add a catchy title" required>
@@ -19,13 +19,12 @@
                 <div class="invalid-feedback">Please enter some description</div>
                 <div class="valid-feedback">it tells a lot</div>
             </div>
-
+            
             <div class="mb-3">
-                <label for="image" class="form-label">Image Link</label>
-                <input type="text" name="listing[image]" class="form-control" placeholder="enter image URL/Link" required>
+                <label for="image" class="form-label">Upload Image</label>
+                <input type="file" name="listing[image]" class="form-control"  required>
                 <div class="invalid-feedback">Please enter a valid URL</div>
                 <div class="valid-feedback">Image seem's awesome</div>
-
             </div>
 
             <!-- Price and Country in one row -->

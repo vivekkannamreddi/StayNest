@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const List = require('./models/listing.js');
 const path = require("path");
@@ -14,6 +15,11 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
 const userRoute = require("./routes/userRoute.js")
+
+
+
+
+
 
     
 const app = express();
@@ -102,17 +108,6 @@ app.use((err,req,res,next)=>{
     res.status(statusCode).render("./ErrorPage/error.ejs",{message})
 })
 
-
-
-// app.get('/demouser',wrapAsync(async (req,res)=>{
-//     const fakeuser = new User({
-//         email:"fake@gmail.com",
-//         username:"vivekkannamreddi"
-//     })
-//     let registereduser = await User.register(fakeuser,"vivekkannamreddi@123j");
-//     res.send(registereduser)
-    
-// }))
 
 app.get('/',validateListing,wrapAsync(async (req,res)=>{
     const allLists =  await List.find({});
