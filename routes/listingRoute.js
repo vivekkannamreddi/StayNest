@@ -18,15 +18,15 @@ router.route("/")
     
 
 //new route
-router.get("/new",isLoggedIn,validateListing,wrapAsync(listingController.renderNewForm))
+router.get("/new",isLoggedIn,listingController.renderNewForm)
 
 router.route("/:id")
-    .get(validateListing,wrapAsync(listingController.showListing))
+    .get(wrapAsync(listingController.showListing))
     .put(isLoggedIn,isOwnerEditDelete,validateListing,upload.single("listing[image]"),wrapAsync(listingController.updateListing))
-    .delete(isLoggedIn,isOwnerEditDelete,isLoggedIn,wrapAsync(listingController.destroyListing))
+    .delete(isLoggedIn,isOwnerEditDelete,wrapAsync(listingController.destroyListing))
 
 
 //edit route
-router.get("/:id/edit",isLoggedIn,isOwnerEditDelete,validateListing,wrapAsync(listingController.editForm))
+router.get("/:id/edit",isLoggedIn,isOwnerEditDelete,wrapAsync(listingController.editForm))
 
 module.exports = router;

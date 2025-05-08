@@ -4,15 +4,16 @@ const {listingSchemaJoi,reviewSchemaJoi } = require("./schemaValidationJoi.js")
 const Review = require('./models/review.js');
 
 
-module.exports.isLoggedIn=(req,res,next)=>{
-    if(!req.isAuthenticated()){
-        //redirect url for post login
-        req.session.redirectUrl = req.originalUrl;
-        req.flash("error","You must be logged in to Create new Listing!");
+module.exports.isLoggedIn = (req, res, next) => {
+    console.log("Checking login...");
+    if (!req.isAuthenticated()) {
+        req.session.redirecturl=req.originalUrl;
+        req.flash("error", "You must be signed in first!");
         return res.redirect("/login");
     }
-    next()
-}
+    next();
+};
+
 
 module.exports.saveRedirectUrl=(req,res,next)=>{
     if(req.session.redirectUrl){
