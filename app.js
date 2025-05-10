@@ -69,7 +69,7 @@ const dburl = process.env.mongoURI;
 const store =MongoStore.create({
     mongoUrl:dburl,
     crypto:{
-        secret:process.env.SECRET;
+        secret:process.env.SECRET
     },
     touchAfter:24*3600
 })
