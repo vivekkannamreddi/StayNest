@@ -10,11 +10,13 @@ const {listingSchemaJoi ,reviewSchemaJoi} = require("./schemaValidationJoi.js");
 const listingRoute = require("./routes/listingRoute.js");
 const reviewRoute = require('./routes/reviewRoute.js');
 const session = require("express-session");
+const MongoStore = require("connect-mongo")
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
 const userRoute = require("./routes/userRoute.js")
+const connectdb = require('./database/db.js');
 
 
 
@@ -44,7 +46,7 @@ app.use(express.static(path.join(__dirname,"public")));
 //     await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust")
 // }
 
-const connectdb = require('./database/db.js');
+
 connectdb().then(() => {
     console.log("Connected to MongoDB Atlas");
 }).catch((error) => {
@@ -62,19 +64,31 @@ const validateListing = (req,res,next)=>{
     }
 }
 
+const dburl = process.env.mongoURI;
 
-
-
+const store =MongoStore.create({
+    mongoUrl:dburl,
+    crypto:{
+        secret:"mysupersecretcode"
+    },
+    touchAfter:24*3600
+})
+store.on("error",(err)=>{
+    console.log("error in mongo session store",err)
+})
 const sessionOptions = {
+    store:store,
     secret:"mysupersecretcode",
     resave:false,
-    saveUninitialized:true,
+    saveUninitialized:false,
     cookie:{
         expires:Date.now() + 7*24*60*60*1000,
         maxAge:7*24*60*60*1000,
         httpOnly:true
     },
 }
+
+
 
 app.use(session(sessionOptions));
 app.use(flash());
