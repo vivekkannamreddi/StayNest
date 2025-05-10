@@ -21,7 +21,7 @@ const storage = new CloudinaryStorage({
       allowedFormats:["png","jpg","jpeg"]
     },
   });
-  console.log("Cloudinary loaded:", process.env.CLOUD_NAME, process.env.CLOUD_API_KEY ? "KEY_PRESENT" : "MISSING");
+  
 
 
   module.exports={
