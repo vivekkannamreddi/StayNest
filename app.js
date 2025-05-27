@@ -36,15 +36,6 @@ app.use(express.static(path.join(__dirname,"public")));
 
 
 
-// main().then((result)=>{
-//     console.log("connection established...");
-// }).catch((error)=>{
-//     console.log("connection failed..");
-// })
-
-// async function main(){
-//     await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust")
-// }
 
 
 connectdb().then(() => {

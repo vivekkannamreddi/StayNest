@@ -27,9 +27,6 @@ module.exports.showListing=async (req,res)=>{
 
 
 module.exports.createListing=async (req,res,next)=>{
-    // if(!req.body.title||!req.body.description||!req.body.image||!req.body.price||!req.body.location||!req.body.country){
-    //     throw new ExpressError(400,"Send valid data for listing");
-    // }
     let {title,description,image,price,location,country}= req.body.listing;
     let url = req.file.path;
     let filename = req.file.filename;
